@@ -2,15 +2,15 @@ package com.yoonshikhong.cameratest;
 
         import android.app.Activity;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.hardware.Camera;
+        import android.graphics.BitmapFactory;
+        import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
 import android.os.Bundle;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-        import android.view.View;
-        import android.widget.Button;
-        import android.widget.ImageView;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
 
 import java.io.IOException;
 
@@ -32,6 +32,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
     //the camera parameters
     private Parameters parameters;
 
+    private Camera.PictureCallback mCall;
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -51,17 +53,44 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
         //add the callback interface methods defined below as the Surface View callbacks
         sHolder.addCallback(this);
 
-
-
-
         Button capture = (Button) findViewById(R.id.button);
         capture.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                try {
+                    reset();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 //tells Android that this surface will have its data constantly replaced
                 sHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+
+
+                //sets what code should be executed after the picture is taken
+                mCall = new Camera.PictureCallback() {
+                    @Override
+                    public void onPictureTaken(byte[] data, Camera camera) {
+                        //decode the data obtained by the camera into a Bitmap
+                        bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
+                        //set the iv_image
+                        iv_image.setImageBitmap(bmp);
+                    }
+                };
+
+
+
+                mCamera.takePicture(null, null, mCall);
             }
         });
 
+
+
+    }
+
+    private void reset() throws IOException {
+
+        sHolder.addCallback(this);
+        mCamera.setPreviewDisplay(sHolder);
     }
 
     @Override
@@ -74,20 +103,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
         mCamera.setParameters(parameters);
         mCamera.startPreview();
 
-        //sets what code should be executed after the picture is taken
-        Camera.PictureCallback mCall = new Camera.PictureCallback()
-        {
-            @Override
-            public void onPictureTaken(byte[] data, Camera camera)
-            {
-                //decode the data obtained by the camera into a Bitmap
-                bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-                //set the iv_image
-                iv_image.setImageBitmap(bmp);
-            }
-        };
 
-        mCamera.takePicture(null, null, mCall);
     }
 
     @Override
@@ -108,11 +124,5 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback
     @Override
     public void surfaceDestroyed(SurfaceHolder holder)
     {
-        //stop the preview
-        mCamera.stopPreview();
-        //release the camera
-        mCamera.release();
-        //unbind the camera from this object
-        mCamera = null;
     }
 }

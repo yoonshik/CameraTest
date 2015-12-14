@@ -27,7 +27,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/imageView"
         android:layout_above="@+id/button"
-        android:layout_centerHorizontal="true"
+        android:layout_centerHorizontal="false"
         android:layout_marginBottom="71dp" />
 
     <SurfaceView
